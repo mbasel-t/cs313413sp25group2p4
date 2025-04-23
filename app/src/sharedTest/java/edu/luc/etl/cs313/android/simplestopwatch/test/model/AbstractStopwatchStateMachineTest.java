@@ -213,4 +213,14 @@ class UnifiedMockDependency implements TimeModel, ClockModel, StopwatchModelList
     public int getLaptime() {
         return lapTime;
     }
+
+    @Override
+    public void clickInc() {
+
+    }
+
+    @Override
+    public void inc() {
+
+    }
 }
