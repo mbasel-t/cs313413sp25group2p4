@@ -32,6 +32,8 @@ public class MainActivity extends Activity {
         countDownRunnable = new Runnable() {
             @Override
             public void run() {
+                System.out.println(isCountingDown);
+                isCountingDown = false;
                 if (System.currentTimeMillis() - lastButtonPressTime >= INACTIVITY_TIME) {
                     isCountingDown = true;
                     if (counter > 0) {
@@ -39,9 +41,6 @@ public class MainActivity extends Activity {
                         updateDisplay();
                     }
                     handler.postDelayed(this, 1000);
-                    //display.setText(Integer.parseInt(display.getText().toString())+1);
-                } else {
-                    isCountingDown = false;
                 }
             }
         };
@@ -49,18 +48,17 @@ public class MainActivity extends Activity {
 
     private void handleButtonPress() {
         lastButtonPressTime = System.currentTimeMillis();
-
+        boolean reset = false;
         if (isCountingDown) {
-
+            counter = 0;
             handler.removeCallbacks(countDownRunnable);
             isCountingDown = false;
+            reset = true;
         }
 
-        // Increment counter (but don't go over 99)
-        if (counter < MAX_TIME) {
+        if(counter < MAX_TIME && !reset) {
             counter++;
         }
-
         updateDisplay();
 
         // Start or restart the countdown check
