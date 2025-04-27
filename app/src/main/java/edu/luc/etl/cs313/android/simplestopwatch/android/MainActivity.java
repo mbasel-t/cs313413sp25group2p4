@@ -23,6 +23,8 @@ public class MainActivity extends Activity {
     private long lastButtonPressTime = 0;
     private static final int INACTIVITY_TIME = 3000; // 3 seconds in milliseconds
     private static final int MAX_TIME = 99;
+    private boolean alarmJustStarted = false;
+    private boolean bypassInactivityTime = false;
 
     private ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100);
 
@@ -43,16 +45,21 @@ public class MainActivity extends Activity {
             public void run() {
                 System.out.println(isCountingDown);
                 isCountingDown = false;
-                if (System.currentTimeMillis() - lastButtonPressTime >= INACTIVITY_TIME) {
-                    //Beep after 3sec of inactivity, as timer starts to count down
+                if (bypassInactivityTime || System.currentTimeMillis() - lastButtonPressTime >= INACTIVITY_TIME) {
+                    //Beep after 3sec of inactivity, as timer starts to count down, or when timer hits max time
                     if(!isCountingDown && !hasBeeped) {
                         toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 150);
                         hasBeeped = true;
                     }
                     isCountingDown = true;
 
-                    if (counter > 0) {
-                        counter--;
+                    if (isCountingDown && counter > 0) {
+                        if (alarmJustStarted) {
+                            alarmJustStarted = false;
+                        } else {
+                            counter--;
+                        }
+
                         updateDisplay();
                         handler.postDelayed(this, 1000);
                     }
@@ -67,12 +74,12 @@ public class MainActivity extends Activity {
             }
         };
 
-        //Runnnablefor the infinite beeping at end of coutdown
+        //Runnable for the infinite beeping at end of countdown
         beepIndefinitelyRunnable = new Runnable() {
             public void run() {
                 if (isBeepingIndefinitely) {
                     toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 150);
-                    handler.postDelayed(this, 1000);
+                    handler.postDelayed(this, 400);
                 }
             }
         };
@@ -103,7 +110,13 @@ public class MainActivity extends Activity {
         updateDisplay();
 
         // Start or restart the countdown check
-        if (counter > 0) {
+        if (counter == MAX_TIME) {
+            alarmJustStarted = true;
+            bypassInactivityTime = true;
+            handler.removeCallbacks(countDownRunnable);
+            handler.post(countDownRunnable);
+        } else if (counter > 0) {
+            alarmJustStarted = true;
             handler.removeCallbacks(countDownRunnable);
             handler.postDelayed(countDownRunnable, INACTIVITY_TIME);
         } else {
